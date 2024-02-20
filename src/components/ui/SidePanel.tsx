@@ -2,10 +2,11 @@ import NodeTypePanel from '../NodeTypePanel'; // Importing NodeTypePanel compone
 import { Panel } from 'reactflow';
 import { BiMessageRoundedDetail } from "react-icons/bi";
 import { Node } from '../../types/nodeTypes';
+import SettingsPanel from './SettingsPanel';
 
 // SidePanel component
 
-const nodeTypes: Node[] = [
+const nodeTypes = [
     { icon: <BiMessageRoundedDetail size={40} />, text: 'Message', type: 'message'},
     { icon: <BiMessageRoundedDetail size={40} />, text: 'Message Source', type: 'messageSource'},
     { icon: <BiMessageRoundedDetail size={40} />, text: 'Message Target', type: 'messageTarget'},
@@ -15,9 +16,9 @@ const nodeTypes: Node[] = [
 const SidePanel: React.FC = () => {
 
     return (
-        <Panel position="top-right" 
-        className='border shadow-lg rounded-md p-2 h-screen w-48 md:w-56 lg:w-80 bg-white'
-        >
+        <div 
+        className='sidepanel border shadow-lg rounded-sm p-2 h-screen w-48 md:w-56 lg:w-80 bg-white border-[#E3E3E3]'
+        style={{zIndex:9999}}>
             <div className='font-semibold text-2xl'>
                 Nodes Panel
             </div>
@@ -27,7 +28,6 @@ const SidePanel: React.FC = () => {
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                {/* Mapping through nodeTypes to create grid items */}
                 {nodeTypes.map((nodeType, index) => (
                     <NodeTypePanel 
                         key={index} 
@@ -36,8 +36,9 @@ const SidePanel: React.FC = () => {
                         type={nodeType.type}
                     />
                 ))}
-            </div>
-        </Panel>
+                </div>
+            <SettingsPanel />
+        </div>
     );
 };
 

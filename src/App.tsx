@@ -1,4 +1,4 @@
-import { useCallback, useState, useRef } from 'react';
+import { useCallback, useState, useRef, useEffect } from 'react';
 import ReactFlow, { 
     addEdge, 
     useNodesState,
@@ -10,7 +10,7 @@ import ReactFlow, {
     Connection
   } from 'reactflow';
 
-import MessageNode from './components/nodeTypes/MessageNode';
+import MessageNode from './components/ui/nodeTypesPanel/MessageNode';
 import MessageSourceNode from './components/ui/nodeTypesPanel/MessageSourceNode';
 import MessageTargetNode from './components/ui/nodeTypesPanel/MessageTargetNode'
 import 'reactflow/dist/style.css';
@@ -31,6 +31,9 @@ function App() {
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
   const [reactFlowInstance, setReactFlowInstance] = useState<ReactFlowInstance | null>(null);
 
+  // useEffect(() => {
+  //   console.log(nodes);
+  // }, [nodes]);
 
   const onConnect = useCallback(
     (connection: Connection) => setEdges((eds) => addEdge(connection, eds)),
@@ -76,6 +79,7 @@ function App() {
     };
 
     setNodes((nds) => [...nds, newNode]);
+    // console.log(nodes);
   },
   [reactFlowInstance, setNodes],
 );
@@ -84,25 +88,25 @@ function App() {
   return (
     <ReactFlowProvider>
         <div style={{ height: '95vh', width: '100vw' }}
-          ref={reactFlowWrapper}
+          ref={reactFlowWrapper} className='z-0'
         >
-        <ReactFlow
-          nodes={nodes}
-          edges={edges}
-          onNodesChange={onNodesChange}
-          onEdgesChange={onEdgesChange}
-          onConnect={onConnect}
-          onInit={setReactFlowInstance}
-          onDrop={onDrop}
-          onDragOver={onDragOver}
-          nodeTypes={nodeTypes}
-          fitView
-        >
-          <Background/>
-          <Controls />
+          <ReactFlow
+            nodes={nodes}
+            edges={edges}
+            onNodesChange={onNodesChange}
+            onEdgesChange={onEdgesChange}
+            onConnect={onConnect}
+            onInit={setReactFlowInstance}
+            onDrop={onDrop}
+            onDragOver={onDragOver}
+            nodeTypes={nodeTypes}
+            fitView
+          >
 
-        </ReactFlow>
-          <SidePanel/>
+            <Controls />
+
+            <SidePanel/>
+          </ReactFlow>
       </div>
    </ReactFlowProvider>
     

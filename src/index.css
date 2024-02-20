@@ -1,3 +1,9 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+.sidepanel{
+    position: absolute;
+    z-index: 1000; 
+    right: 0;
+}

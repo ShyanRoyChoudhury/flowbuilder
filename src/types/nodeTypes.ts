@@ -12,5 +12,6 @@ export interface Node{
         value?: number
     },
     icon?: ReactElement,
-    text?: string 
+    text?: string,
+    message?: string
 }
