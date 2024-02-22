@@ -1,7 +1,13 @@
+//redux store
+
 import { configureStore } from "@reduxjs/toolkit";
-import nodeReducer from "../features/nodeSlice";
+import nodeReducer from "../features/node/nodeSlice";
+import settingsReducer from "../features/setting/settingSlice";
 export const store = configureStore({
-    reducer: nodeReducer 
+    reducer:{
+        node: nodeReducer,
+        settings: settingsReducer
+    }  
 })
 
 

@@ -1,116 +1,155 @@
-import { useCallback, useState, useRef, useEffect } from 'react';
-import ReactFlow, { 
-    addEdge, 
-    useNodesState,
-    useEdgesState,
-    Background, 
-    Controls, 
-    ReactFlowProvider, 
-    ReactFlowInstance,
-    Connection
-  } from 'reactflow';
+import { useCallback, useState, useRef } from "react";
+import ReactFlow, {
+  addEdge,
+  useNodesState,
+  useEdgesState,
+  Controls,
+  ReactFlowProvider,
+  ReactFlowInstance,
+  Connection,
+} from "reactflow";
 
-import MessageNode from './components/ui/nodeTypesPanel/MessageNode';
-import MessageSourceNode from './components/ui/nodeTypesPanel/MessageSourceNode';
-import MessageTargetNode from './components/ui/nodeTypesPanel/MessageTargetNode'
-import 'reactflow/dist/style.css';
-import './index.css';
+import Header from "./components/ui/Header.tsx";
 
-import SidePanel from './components/ui/SidePanel';
-//import { Node } from './types/nodeTypes';
+import MessageNode from "./components/ui/sidepanel/nodeTypesPanel/MessageNode.tsx";
+import "reactflow/dist/style.css";
+import "./index.css";
 
+import SidePanel from "./components/ui/sidepanel/SidePanel.tsx";
 
-// we define the nodeTypes outside of the component to prevent re-renderings
-// you could also use useMemo inside the component
-const nodeTypes = { message : MessageNode, messageSource: MessageSourceNode, messageTarget: MessageTargetNode };
+const nodeTypes = { message: MessageNode }; // Add new node types and name them
 
 function App() {
-
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
-  const [reactFlowInstance, setReactFlowInstance] = useState<ReactFlowInstance | null>(null);
-
-  // useEffect(() => {
-  //   console.log(nodes);
-  // }, [nodes]);
-
-  const onConnect = useCallback(
-    (connection: Connection) => setEdges((eds) => addEdge(connection, eds)),
-    [setEdges]
-  );
+  const [reactFlowInstance, setReactFlowInstance] =
+    useState<ReactFlowInstance | null>(null);
+  const [error, setError] = useState<boolean>(false);
 
   const onDragOver = useCallback((event: React.DragEvent<HTMLDivElement>) => {
+    // react drag element
     event.preventDefault();
-    event.dataTransfer.dropEffect = 'move';
+    event.dataTransfer.dropEffect = "move";
   }, []);
 
-  const onDrop = useCallback((event: React.DragEvent<HTMLDivElement>) => {
-    event.preventDefault();
+  const onDrop = useCallback(
+    (event: React.DragEvent<HTMLDivElement>) => {
+      // on dropping the node in reactflow component
+      event.preventDefault();
+      const type = event.dataTransfer.getData("application/reactflow");
+      // check if the dropped element is valid & Ensure reactFlowInstance is available
+      if (typeof type === "undefined" || !type || !reactFlowInstance) {
+        return;
+      }
 
-    const type = event.dataTransfer.getData('application/reactflow');
+      // Get the position from reactFlowInstance
+      const position = reactFlowInstance.screenToFlowPosition({
+        x: event.clientX,
+        y: event.clientY,
+      });
 
-    // check if the dropped element is valid
-    if (typeof type === 'undefined' || !type) {
+      // Check if position is available
+      if (!position) {
+        return;
+      }
+
+      // creating a newNode which is created on drop event
+      const newNode = {
+        id: "node-" + Math.random(),
+        type,
+        position,
+        data: {
+          label: `${type} node`,
+          value: 0,
+          id: "node-" + Math.random(),
+          targetNode: "",
+        },
+      };
+      setNodes((nds) => [...nds, newNode]);
+      //dispatch(setClickedNode(newNode.id))
+      // console.log(nodes);
+    },
+    [reactFlowInstance, setNodes]
+  );
+
+  const onConnect = useCallback(
+    (connection: Connection) => {
+      setEdges((eds) => addEdge(connection, eds));
+      // Get the IDs of the source and target nodes
+      const sourceNodeId = connection.source;
+      const targetNodeId = connection.target;
+
+      // Find the source and target nodes in the nodes array
+      const sourceNode = nodes.find((node) => node.id === sourceNodeId);
+      const targetNode = nodes.find((node) => node.id === targetNodeId);
+
+      if (sourceNode && targetNode) {
+        // Update the edges array for the source node
+        sourceNode.data.targetNode = connection.target;
+
+        // Update the nodes state to reflect the changes
+        setNodes((prevNodes) => [
+          ...prevNodes.filter(
+            (node) => node.id !== sourceNodeId && node.id !== targetNodeId
+          ),
+          sourceNode,
+          targetNode,
+        ]);
+      }
+    },
+    [nodes, setEdges, setNodes]
+  );
+
+  const onSave = () => {
+    if (nodes.length <= 1) {
+      // No need to check for empty targets if there's only one node
+      console.log("Save operation successful");
+      setError(false);
       return;
     }
 
-    // Ensure reactFlowInstance is available
-    if (!reactFlowInstance) {
+    // list of nodes with empty targest
+    const nodesWithEmptyTargets = nodes.filter(
+      (node) => node.data && node.data.targetNode === ""
+    );
+    if (nodesWithEmptyTargets.length > 1) {
+      console.error("Error: More than one node has empty target handles");
+      setError(true);
       return;
     }
 
-    // Get the position from reactFlowInstance
-    const position = reactFlowInstance.screenToFlowPosition({
-      x: event.clientX,
-      y: event.clientY,
-    });
-
-    // Check if position is available
-    if (!position) {
-      return;
-    }
-
-    const newNode = {
-      id: 'node-' + Math.random(),
-      type,
-      position,
-      data: { label: `${type} node`, value: 0 },
-    };
-
-    setNodes((nds) => [...nds, newNode]);
-    // console.log(nodes);
-  },
-  [reactFlowInstance, setNodes],
-);
-
+    // Proceed with save operation
+    console.log("Save operation successful");
+    setError(false);
+  };
 
   return (
     <ReactFlowProvider>
-        <div style={{ height: '95vh', width: '100vw' }}
-          ref={reactFlowWrapper} className='z-0'
+      <Header onSave={onSave} error={error} />
+      <div
+        style={{ height: "95vh", width: "100vw" }}
+        ref={reactFlowWrapper}
+        className="z-0"
+      >
+        <ReactFlow
+          nodes={nodes}
+          edges={edges}
+          onNodesChange={onNodesChange}
+          onEdgesChange={onEdgesChange}
+          onConnect={onConnect}
+          onInit={setReactFlowInstance}
+          onDrop={onDrop}
+          onDragOver={onDragOver}
+          nodeTypes={nodeTypes}
+          fitView
         >
-          <ReactFlow
-            nodes={nodes}
-            edges={edges}
-            onNodesChange={onNodesChange}
-            onEdgesChange={onEdgesChange}
-            onConnect={onConnect}
-            onInit={setReactFlowInstance}
-            onDrop={onDrop}
-            onDragOver={onDragOver}
-            nodeTypes={nodeTypes}
-            fitView
-          >
-
-            <Controls />
-
-            <SidePanel/>
-          </ReactFlow>
+          <Controls />
+          <SidePanel />
+        </ReactFlow>
       </div>
-   </ReactFlowProvider>
-    
-  )
+    </ReactFlowProvider>
+  );
 }
 
 export default App;
